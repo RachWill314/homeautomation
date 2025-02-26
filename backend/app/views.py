@@ -78,7 +78,48 @@ def update_combination():
             return jsonify({"status": "complete", "data": "complete"}) , 200
         return jsonify({"status": "failed", "data": "failed"}), 400
 
+@app.route('/api/update',methods=["POST"])
+def update():
+    if request.method=='POST':
+        data = request.get_json()
+        timestamp = datetime.utcnow().timestamp()
+        data['timestamp'] = timestamp
+        Mqtt.publish('620155671',json.dumps(data))
+        result = mongo.update(data)
+        if result.inserted_id:
+            return jsonify({"status":"complete","data":"complete"})
+        else:
+            return jsonify({"status":"failed","data":"failed"})
 
+
+
+@app.route('/api/reserve/<start>/<end>',methods=['GET'])
+def reserve(start,end):
+    start_t  = int(start)
+    end_t = int(end)
+    if request.method=="GET":
+        result = mongo.get_reserve(start_t,end_t)
+        data = list(result)
+        print(data)
+        if data!=[]:
+            return jsonify({"status":"found","data":data})
+        return jsonify({"status":"failed",'data':0})
+
+
+
+
+@app.route('/api/avg/<start>/<end>',methods=['GET'])
+def avg(start,end):
+    if request.method=='GET':
+        result = mongo.get_avg(int(start),int(end))
+        data = list(result)
+        if result!='Failed':
+            return jsonify({"status":"found","data":data[0].get('average')})
+        return jsonify({"status":"failed","data":0})
+
+# @app.route('/api/test')
+# def send():
+#     return jsonify({"status":"success"})
    
 # 4. CREATE ROUTE FOR '/api/reserve/<start>/<end>'
 
