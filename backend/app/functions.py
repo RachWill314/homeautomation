@@ -93,7 +93,59 @@ class DB:
         else:                  
             return result
         
+ def update(self,document):
+        try:
+            remotedb = self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result = remotedb.ELET2415.radar.insert_one(document)
+            print(document)
+            print(result.inserted_id)
+            return result
+        except Exception as e:
+            print(e)
+            return "Failed"
+    
+    def get_reserve(self,start,end):
+        try:
+            remotedb = self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            query = {'timestamp': {'$gte':start,'$lte':end}}
+            projection = {'timestamp':0,'_id':0}
+            result = remotedb.ELET2415.radar.find(query,projection)
+            return result
+        except Exception as e:
+            print(e)
+            return 'Failed'
 
+            
+            
+    def get_avg(self,start,end):
+        try:
+            remotedb = self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            query = {'timestamp': {'$gte':start,'$lte':end}}
+            result = remotedb.ELET2415.radar.aggregate([
+    {
+        '$match': {
+            'timestamp': {
+                '$gte': start, 
+                '$lte': end
+            }
+        }
+    }, {
+        '$group': {
+            '_id': None, 
+            'average': {
+                '$avg': '$reserve'
+            }
+        }
+    }, {
+        '$project': {
+            '_id': 0
+        }
+    }
+])
+            return result
+        except Exception as e:
+            print(e)
+            return 'Failed'
    
 
 
