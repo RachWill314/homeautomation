@@ -27,10 +27,58 @@ from math import floor
 
 
 # 1. CREATE ROUTE FOR '/api/set/combination'
-    
+@app.route('/api/set/combination', methods=['POST'])
+def set_combination():
+    '''Sets combination'''
+
+    if request.method == "POST":
+        passcode = request.form.get('passcode')
+        print(passcode)
+        if passcode and len(passcode) == 4:
+            result = mongo.update_passcode(passcode)
+            if result:
+                return jsonify({"status": "complete", "data": "complete"})
+        return jsonify({"status": "failed", "data": "failed"}), 400
 # 2. CREATE ROUTE FOR '/api/check/combination'
 
+@app.route('/api/check/combination', methods=['POST'])
+def check_combination():
+    '''Checks combination'''
+
+    if request.method == "POST":
+        data = request.form.get("passcode")
+        print("Huh")
+        # data = request.json
+        print(data)
+        # # if 
+        result = mongo.check_passcode(data)
+
+        if result == 1:
+            return jsonify({"status": "complete", "data": "complete"}) , 200
+        return jsonify({"status": "failed", "data": "failed"}), 400
+
 # 3. CREATE ROUTE FOR '/api/update'
+# @app.route('/api/update', method=['POST'])
+# def update_combination():
+#     '''Returns combination'''
+
+@app.route('/api/update', methods=['POST'])
+def update_combination():
+    '''Updates combination'''
+
+    if request.method == "POST":
+        data = request.form.get("passcode")
+        print("In Update")
+        # data = request.json
+        print(data)
+        # # if 
+        result = mongo.update_passcode(data)
+
+        if result:
+            return jsonify({"status": "complete", "data": "complete"}) , 200
+        return jsonify({"status": "failed", "data": "failed"}), 400
+
+
    
 # 4. CREATE ROUTE FOR '/api/reserve/<start>/<end>'
 

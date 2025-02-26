@@ -65,7 +65,34 @@ class DB:
     
     # 5. CREATE A FUNCTION THAT RETURNS A COUNT, OF THE NUMBER OF DOCUMENTS FOUND IN THE 'code' COLLECTION WHERE THE 'code' FEILD EQUALS TO THE PROVIDED PASSCODE.
     #    REMEMBER, THE SCHEMA FOR THE SINGLE DOCUMENT IN THE 'code' COLLECTION IS {"type":"passcode","code":"0070"}
-
+    def check_passcode(self, passcode):
+        '''Returns count of passcode'''
+        '''ADD A NEW STORAGE LOCATION TO COLLECTION'''
+        try:
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result      = remotedb.ELET2415.code.count_documents({"code":passcode})
+        except Exception as e:
+            msg = str(e)
+            if "duplicate" not in msg:
+                print("addUpdate error ",msg)
+            return 0
+        else:                  
+            return result
+        
+    def update_passcode(self, passcode):
+        '''Returns count of passcode'''
+        '''ADD A NEW STORAGE LOCATION TO COLLECTION'''
+        try:
+            remotedb 	= self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
+            result      = remotedb.ELET2415.code.find_one_and_update({"type":"passcode"}, {"$set":{"code":passcode}}, upsert=True, return_document=self.ReturnDocument.AFTER)
+        except Exception as e:
+            msg = str(e)
+            if "duplicate" not in msg:
+                print("addUpdate error ",msg)
+            return 0
+        else:                  
+            return result
+        
 
    
 

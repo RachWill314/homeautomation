@@ -1,5 +1,8 @@
 
+#include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <NewPing.h>
+#include <ArduinoJson.h>
 // IMPORT ALL REQUIRED LIBRARIES
 
 #include <math.h>
@@ -9,11 +12,11 @@
 #define HOST_IP     "localhost"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
 #define HOST_PORT   "8080"            // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
 #define route       "api/update"      // LEAVE UNCHANGED 
-#define idNumber    "620012345"       // REPLACE WITH YOUR ID NUMBER 
+#define idNumber    "620155671"       // REPLACE WITH YOUR ID NUMBER 
 
 // WIFI CREDENTIALS
-#define SSID        "YOUR WIFI"      // "REPLACE WITH YOUR WIFI's SSID"   
-#define password    "YOUR PASSWORD"  // "REPLACE WITH YOUR WiFi's PASSWORD" 
+#define SSID        "MonaConnect"      // "REPLACE WITH YOUR WIFI's SSID"   
+#define password    ""  // "REPLACE WITH YOUR WiFi's PASSWORD" 
 
 #define stay        100
  
@@ -23,21 +26,33 @@
 #define espRX         10
 #define espTX         11
 #define espTimeout_ms 300
+#define TRIGGER_PIN 9
+#define ECHO_PIN 8
+#define MAX_DISTANCE 200
 
  
  
 /* Declare your functions below */
- 
- 
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); 
+double readRadar();
+double getWaterheight(float maxWaterHeight, float radar);
+double getReserve(float waterheight, float maxWaterHeight);
+double getPercentage(float waterheight, float maxWaterHeight);
 
 SoftwareSerial esp(espRX, espTX); 
+
+double maxWaterheight = 77.763;
+double waterheight;
+double reserve; 
+double percentage;
  
 
 void setup(){
 
   Serial.begin(115200); 
   // Configure GPIO pins here
-
+  pinMode(espRX, INPUT);
+  pinMode(espTX, OUTPUT);
  
 
   espInit();  
@@ -47,9 +62,17 @@ void setup(){
 void loop(){ 
    
   // send updates with schema ‘{"id": "student_id", "type": "ultrasonic", "radar": 0, "waterheight": 0, "reserve": 0, "percentage": 0}’
-
-
-
+  char msg[100] = {0};
+  JsonObject msgJson = jsonBuffer.createObject();
+  msgJson["id"] = idNumber;
+  msgJson["type"] = "ultrasonic";
+  msgJson["radar"] = readRadar();
+  msgJson["waterheight"] = getWaterheight();
+  msgJson["reserve"] = getReserve();
+  msgJson["percentage"] = getPercentage();
+  msgJson.printTo(mssg, sizeof(mssg));
+  espUpdate(mssg);
+  
   delay(1000);  
 }
 
@@ -106,4 +129,21 @@ void espInit(){
 
 //***** Design and implement all util functions below ******
  
+// Function to read the radar sensor
+double readRadar(){
+  delay(50);
+   unsigned int radar = sonar.ping_cm();
+   Serial.print(radar);
+   //Serial.println("cm");
+  return radar;
+}
 
+double getWaterheight(double maxWaterheight, double radar){
+  return maxWaterheight - radar;
+}
+double getReserve(double waterheight, double maxWaterheight){
+  return (waterheight/ maxWaterheight) * 1000;
+}
+double getPercentage(double waterheight, double maxWaterheight){
+  return (waterheight/ maxWaterheight) * 100;
+}
